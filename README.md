@@ -47,8 +47,11 @@ See `com.example.DemoApplication` for comments.
 
 ### Console Writer
 
+This is useful for testing, but you do not need to include it in your production jobs. You can also load it conditionally using Spring Profiles
+
 ```
 @Bean
+@Profile("local")
 public CommandLineRunner initConsoleReporter(MetricRegistry metricRegistry) {
   return (args) -> {
     ConsoleReporter writer = ConsoleReporter.forRegistry(reg)
@@ -64,6 +67,8 @@ public CommandLineRunner initConsoleReporter(MetricRegistry metricRegistry) {
 ### StatsD Writer
 
 ```
+// MetricsConig.java
+
 @Bean
 public MetricsEndpointMetricReader metricsEndpointMetricReader(MetricsEndpoint metricsEndpoint) {
   return new MetricsEndpointMetricReader(metricsEndpoint);
@@ -75,6 +80,12 @@ public MetricWriter statsdWriter() {
   String prefix = (int) (Math.random() * Integer.MAX_VALUE) + "";
   return new StatsdMetricWriter(prefix, "localhost", 8125);
 }
+```
+
+```
+// application.properties
+
+spring.metrics.export.delay-millis=10000
 ```
 
 ## References
