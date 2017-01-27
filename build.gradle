@@ -27,8 +27,8 @@ repositories {
 
 
 dependencies {
-	compile('org.springframework.boot:spring-boot-starter-actuator')
 	compile('org.springframework.boot:spring-boot-starter-web')
+	compile('org.springframework.boot:spring-boot-starter-actuator')
     // http://metrics.dropwizard.io/3.1.0/getting-started/
 	compile group: 'io.dropwizard.metrics', name: 'metrics-core', version: '3.1.2'
     // http://metrics.ryantenney.com/

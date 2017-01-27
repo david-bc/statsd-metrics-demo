@@ -3,6 +3,11 @@ package com.example;
 import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.annotation.Counted;
+import com.codahale.metrics.annotation.Gauge;
+import com.codahale.metrics.annotation.Metered;
+import com.codahale.metrics.annotation.Timed;
+import com.ryantenney.metrics.spring.config.annotation.EnableMetrics;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.ExportMetricWriter;
@@ -18,7 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.concurrent.TimeUnit;
 
-@RestController
 @SpringBootApplication
 public class DemoApplication {
 
@@ -30,36 +34,64 @@ public class DemoApplication {
 		SpringApplication.run(DemoApplication.class, args);
 	}
 
-    // Dropwizard metrics API
-    private final MetricRegistry metricRegistry;
-    // Dropwizard Counter Metric created at initialization time
-	private final Counter counter;
-    // SpringBoot Counter Service that falls back to Dropwizard counter when Dropwizard is on the classpath.
-    private final CounterService counterService;
+    @EnableMetrics
+    @RestController
+    public static class MyMetricsController {
 
-	public DemoApplication(MetricRegistry reg, CounterService counterService) {
-		this.metricRegistry = reg;
-		this.counter = reg.counter("counter.ae.rest.testing");
-        this.counterService = counterService;
+        // Dropwizard metrics API
+        private final MetricRegistry metricRegistry;
+        // Dropwizard Counter Metric created at initialization time
+        private final Counter counter;
+        // SpringBoot Counter Service that falls back to Dropwizard counter when Dropwizard is on the classpath.
+        private final CounterService counterService;
+
+        public MyMetricsController(MetricRegistry reg, CounterService counterService) {
+            this.metricRegistry = reg;
+            this.counter = reg.counter("counter.ae.rest.testing");
+            this.counterService = counterService;
+        }
+
+        /**
+         * Define the endpoints that will increment the metrics
+         * @return
+         */
+        @GetMapping
+        public boolean in() {
+            // increment the pre-initialized metric
+            counter.inc();
+            // increment a metric on the fly
+            metricRegistry.counter("counter.ae.on.the.fly").inc();
+            // increment a SpringBoot counter
+            counterService.increment("counter.ae.cs.testing");
+            // increment a SpringBoot meter
+            counterService.increment("meter.ae.cs.meter.testing");
+            return true;
+        }
+
+        @Metered(name = "meter.ae.testing")
+        @GetMapping("/meter")
+        public boolean testMetered() {
+            return false;
+        }
+
+        @Counted(name = "counter.ae.testing")
+        @GetMapping("/counter")
+        public boolean testCounter() {
+            return false;
+        }
+
+        @Gauge(name = "gauge.ae.testing")
+        @GetMapping("/gauge")
+        public boolean testGauge() {
+            return false;
+        }
+
+        @Timed(name = "timer.ae.testing")
+        @GetMapping("/timer")
+        public boolean testTimer() {
+            return false;
+        }
     }
-
-
-    /**
-     * Define the endpoints that will increment the metrics
-     * @return
-     */
-	@GetMapping
-	public boolean in() {
-        // increment the pre-initialized metric
-		counter.inc();
-        // increment a metric on the fly
-		metricRegistry.counter("counter.ae.on.the.fly").inc();
-        // increment a SpringBoot counter
-        counterService.increment("counter.ae.cs.testing");
-        // increment a SpringBoot meter
-        counterService.increment("meter.ae.cs.meter.testing");
-		return true;
-	}
 
     @Bean
     public MetricsEndpointMetricReader metricsEndpointMetricReader(MetricsEndpoint metricsEndpoint) {
@@ -76,12 +108,12 @@ public class DemoApplication {
     @Bean
     public CommandLineRunner initConsoleReporter(MetricRegistry metricRegistry) {
         return (args) -> {
-            ConsoleReporter writer = ConsoleReporter.forRegistry(this.metricRegistry)
+            ConsoleReporter writer = ConsoleReporter.forRegistry(metricRegistry)
                     .convertRatesTo(TimeUnit.SECONDS)
                     .convertDurationsTo(TimeUnit.MILLISECONDS)
                     .build();
 
-            writer.start(10, TimeUnit.SECONDS);
+            writer.start(3, TimeUnit.SECONDS);
         };
     }
 }
