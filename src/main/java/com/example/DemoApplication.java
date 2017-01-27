@@ -48,6 +48,7 @@ public class DemoApplication {
         public MyMetricsController(MetricRegistry reg, CounterService counterService) {
             this.metricRegistry = reg;
             this.counter = reg.counter("counter.ae.rest.testing");
+
             this.counterService = counterService;
         }
 
@@ -68,7 +69,7 @@ public class DemoApplication {
             return true;
         }
 
-        @Metered(name = "meter.ae.testing")
+        @Metered(name = "meter.ae.testing") // name => com.example.DemoApplication.MyMetricsController.meter.ae.testing
         @GetMapping("/meter")
         public boolean testMetered() {
             return false;
