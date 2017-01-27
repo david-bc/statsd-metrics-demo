@@ -3,7 +3,7 @@
 ## Overview
 
 | Metric Type | Target Chart Type | Description | Example Usecase |
-| - | - | - | - |
+| --- | --- | --- | --- |
 | Counter | Pie Chart, Bar Chart | A counter is just a gauge for an AtomicLong instance. You can increment or decrement its value. For example, we may want a more efficient way of measuring the pending job in a queue. | Total execution, Total successes |
 | Gauge | Gauge, Line/Area Chart | A gauge is an instantaneous measurement of a value. For example, we may want to measure the number of pending jobs in a queue. | Kafka Consumer Lag |
 | Meter | Pie Chart, Bar Chart | A meter measures the rate of events over time (e.g., “requests per second”). In addition to the mean rate, meters also track 1-, 5-, and 15-minute moving averages. | Rest requests per second |
