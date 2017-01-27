@@ -8,6 +8,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.ExportMetricWriter;
 import org.springframework.boot.actuate.endpoint.MetricsEndpoint;
 import org.springframework.boot.actuate.endpoint.MetricsEndpointMetricReader;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.actuate.health.Status;
 import org.springframework.boot.actuate.metrics.CounterService;
 import org.springframework.boot.actuate.metrics.statsd.StatsdMetricWriter;
 import org.springframework.boot.actuate.metrics.writer.MetricWriter;
@@ -30,6 +33,19 @@ public class DemoApplication {
 		SpringApplication.run(DemoApplication.class, args);
 	}
 
+    @Bean
+    public HealthIndicator test() {
+        return () -> {
+            if (Math.random() < 0.1) {
+                return Health.down().build();
+            }
+            if (Math.random() < 0.01) {
+                return Health.status("LUCKY").build();
+            }
+            return Health.up().build();
+        };
+    }
+
     // Dropwizard metrics API
     private final MetricRegistry metricRegistry;
     // Dropwizard Counter Metric created at initialization time
@@ -42,7 +58,6 @@ public class DemoApplication {
 		this.counter = reg.counter("counter.ae.rest.testing");
         this.counterService = counterService;
     }
-
 
     /**
      * Define the endpoints that will increment the metrics
