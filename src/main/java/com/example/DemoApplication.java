@@ -20,27 +20,43 @@ import java.util.concurrent.TimeUnit;
 
 @RestController
 @SpringBootApplication
-public class DemoApplication implements CommandLineRunner {
+public class DemoApplication {
 
+    /**
+     * Runs the spring boot application
+     * @param args
+     */
 	public static void main(String[] args) {
 		SpringApplication.run(DemoApplication.class, args);
 	}
 
-	private final MetricRegistry reg;
+    // Dropwizard metrics API
+    private final MetricRegistry metricRegistry;
+    // Dropwizard Counter Metric created at initialization time
 	private final Counter counter;
+    // SpringBoot Counter Service that falls back to Dropwizard counter when Dropwizard is on the classpath.
     private final CounterService counterService;
 
 	public DemoApplication(MetricRegistry reg, CounterService counterService) {
-		this.reg = reg;
+		this.metricRegistry = reg;
 		this.counter = reg.counter("counter.ae.rest.testing");
         this.counterService = counterService;
     }
 
+
+    /**
+     * Define the endpoints that will increment the metrics
+     * @return
+     */
 	@GetMapping
 	public boolean in() {
+        // increment the pre-initialized metric
 		counter.inc();
-		reg.counter("counter.ae.on.the.fly").inc();
+        // increment a metric on the fly
+		metricRegistry.counter("counter.ae.on.the.fly").inc();
+        // increment a SpringBoot counter
         counterService.increment("counter.ae.cs.testing");
+        // increment a SpringBoot meter
         counterService.increment("meter.ae.cs.meter.testing");
 		return true;
 	}
@@ -57,13 +73,15 @@ public class DemoApplication implements CommandLineRunner {
         return new StatsdMetricWriter(prefix, "localhost", 8125);
     }
 
-    @Override
-    public void run(String... args) throws Exception {
-        ConsoleReporter writer = ConsoleReporter.forRegistry(reg)
-                .convertRatesTo(TimeUnit.SECONDS)
-                .convertDurationsTo(TimeUnit.MILLISECONDS)
-                .build();
+    @Bean
+    public CommandLineRunner initConsoleReporter(MetricRegistry metricRegistry) {
+        return (args) -> {
+            ConsoleReporter writer = ConsoleReporter.forRegistry(this.metricRegistry)
+                    .convertRatesTo(TimeUnit.SECONDS)
+                    .convertDurationsTo(TimeUnit.MILLISECONDS)
+                    .build();
 
-        writer.start(10, TimeUnit.SECONDS);
+            writer.start(10, TimeUnit.SECONDS);
+        };
     }
 }
